@@ -1,0 +1,25 @@
+group 'com.github.dev001hajipro'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'java'
+
+
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'utf-8'
+}
+
+allprojects {
+    tasks.withType(JavaCompile) {
+        sourceCompatibility = '1.8'
+        targetCompatibility = '1.8'
+    }
+}
