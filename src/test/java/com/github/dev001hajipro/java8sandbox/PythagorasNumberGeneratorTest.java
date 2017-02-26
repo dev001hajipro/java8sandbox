@@ -31,6 +31,7 @@ public class PythagorasNumberGeneratorTest {
 
     @Test
     public void num() throws Exception {
+        PythagorasNumberGenerator.num(0).limit(10).forEach(System.out::print);
         PythagorasNumberGenerator.num(1).limit(3).forEach(System.out::print);
         PythagorasNumberGenerator.num(5).limit(3).forEach(System.out::print);
 

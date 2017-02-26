@@ -16,5 +16,4 @@ public class LambdaSandboxTest {
     public void showRunnableHash() throws Exception {
         LambdaSandbox.showRunnableHash();
     }
-
 }

@@ -55,7 +55,7 @@ class HelloStream {
                 .forEach(System.out::print);
     }
 
-    // flatmapで二重ループ
+    // flatMapで二重ループ
     static void sample05() {
         System.out.println("sample05");
         IntStream.range(0, 4).boxed()
