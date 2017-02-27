@@ -1,9 +1,11 @@
 package com.github.dev001hajipro.java8sandbox;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Function;
+import java.util.*;
+import java.util.function.*;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
  * Java8の勉強
@@ -23,6 +25,190 @@ public class App {
         getPersons().forEach(System.out::println);
 
         useFunction();
+
+        double avg = getPersons().stream().reduce(0.0, (acc, p) -> acc + p.getAge(), (r1, r2) -> r1 + r2 / getPersons().size());
+        System.out.println("avg=" + avg);
+
+        double avg3 = getPersons().stream().mapToInt(Person::getAge).average().orElse(0);
+        System.out.println("avg3=" + avg3);
+
+        // プリミティブStreamからStreamの変換は、boxedを使う。
+        IntStream.range(0, 100).boxed()
+                .map(n -> String.format("n=%d,", n)).collect(Collectors.toList())
+                .forEach(System.out::print);
+
+        System.out.println("xxxxxxoptional\n");
+        Optional<Person> optional = getPersons().stream().findFirst();
+        optional.ifPresent(person -> System.out.println(person.getName()));
+
+
+        //testParallel();
+        //testParallel2();
+        //testParallel3();
+
+        List<String> r1 = Stream.of(1, 2, 3, 4, 5)
+                .map(n -> "*" + n)
+                .parallel()
+                .collect(Collectors.toList());
+        System.out.println(r1);
+
+        t1();
+
+        t2();
+
+        t3();
+
+        // Spliterator
+        // Split + iterator
+        System.out.println("");
+        testSpliterator();
+    }
+
+    private static void testSpliterator() {
+        Logger.getGlobal().info("aaa");
+        System.out.println("testSpliterator");
+        List<Integer> list = Arrays.asList(1, 2, 2, 5, 4, 3, 9, 8, 7, 7);
+        list.stream()
+                .sorted()
+                .distinct()
+                .forEach(System.out::print);
+    }
+
+    private static void t3() {
+        System.out.println("stream of");
+        Stream.of(1, 2, 3, 4, 5).forEach(System.out::print);
+        System.out.println();
+
+        System.out.println("arrays as list");
+        Arrays.asList(1, 2, 3, 4, 5).forEach(System.out::print);
+        System.out.println();
+
+        System.out.println("infinite");
+        UnaryOperator<Integer> inc = i -> i + 1;
+        Stream.iterate(0, inc).limit(5).forEach(System.out::print);
+        System.out.println();
+
+        System.out.println("generate");
+        Supplier<String> sup = () -> ":";
+        Stream.generate(sup).limit(10).forEach(System.out::print);
+        System.out.println();
+
+        System.out.println("range");
+        IntStream.range(0, 100).skip(1).limit(89).forEach(System.out::print);
+        System.out.println();
+    }
+
+    private static void t2() {
+        System.out.println("t2==================");
+        Function<String, Integer> f1 = Integer::parseInt;
+
+        Consumer<Integer> c1 = i -> {
+            System.out.print("value=");
+            System.out.println(i);
+        };
+
+        List<Integer> list = Stream.of("5", "3", "9", "4")
+                .map(f1)
+                .collect(Collectors.toList());
+
+        list.forEach(c1);
+
+        // Filter
+        Predicate<String> filter1 = s -> !s.contains("a");
+        Stream.of("apple", "orange", "banana", "melon", "blackberry", "peach", "kiwifruit", "pear")
+                .filter(filter1)
+                .forEach(s -> {
+                    System.out.println("fruit=");
+                    System.out.println("fruit=" + s);
+                });
+    }
+
+    /**
+     * やってはいけない例
+     * リストの各要素を手続き型プログラミングのようにまとめる。
+     * この場合、.sequentialの場合は、
+     */
+    private static void t1() {
+        // リストは順序を持っている。
+        List<String> firstNames = Arrays.asList("taro", "jiro", "saburo");
+        List<String> lastNames = Arrays.asList("yamada", "tanaka", "kato");
+
+        Iterator<String> iterator = firstNames.iterator();
+
+        lastNames.stream().map(l -> iterator.next() + " " + l)
+                .parallel() // 並列化すると、結果が不定
+                .forEach(System.out::println);
+    }
+
+    private static void testParallel3() {
+        List<Integer> finiteList = new ArrayList<>();
+        for (int i = 0; i < 2000; i++) {
+            finiteList.add(i);
+        }
+        showSequential(finiteList.stream());
+
+        Stream<Integer> infiniteStream = Stream.iterate(0, n -> n + 1);
+        // 無限ストリームの場合値が定まらない。
+        showSequential(infiniteStream);
+    }
+
+    private static void showSequential(Stream<Integer> stream) {
+        List<Integer> result = stream.parallel()
+                //.unordered()
+                .map(n -> n + 1)
+                .peek(n -> System.out.println(n + ":" + Thread.currentThread()))
+                .skip(1000)
+                .limit(300)
+                .collect(Collectors.toList());
+        System.out.printf("from %d to %d\n", result.get(0), result.get(result.size() - 1));
+        System.out.println(result);
+
+    }
+
+    private static void testParallel2() {
+        List<Integer> list = new ArrayList<>();
+        for (int i = 0; i < 10000; i++) {
+            list.add(i);
+        }
+
+        List<Integer> result =
+                list.stream().parallel()
+                        .filter(x -> x % 2 == 0)
+                        .peek(n -> System.out.println(n + ":" + Thread.currentThread()))
+                        .skip(2000)
+                        .limit(2000)
+                        .collect(Collectors.toList());
+
+        System.out.printf("from %d to %d\n", result.get(0), result.get(1999));
+        int start = result.get(0);
+        for (int i : result) {
+            if (i != start) {
+                System.out.println("exception");
+                throw new RuntimeException("xxx" + i);
+            }
+            start += 2;
+        }
+        System.out.println("end");
+    }
+
+
+    private static void testParallel() {
+        // 順序
+        List<Integer> data1 = new ArrayList<>();
+        for (int i = 0; i < 10000000; i++) {
+            data1.add(i);
+        }
+
+        // Stream APIは簡単に並列処理ができるが、単純な処理だとparallelは遅くなるので
+        // 注意が必要
+        long start = System.currentTimeMillis();
+        List<Integer> result = data1.stream().parallel()
+                .filter(x -> x % 2 == 0)
+                .peek(s -> System.out.println(s + ":" + Thread.currentThread()))
+                .skip(1000)
+                .limit(1000000)
+                .collect(Collectors.toList());
+        System.out.println((System.currentTimeMillis() - start) + "ms");
     }
 
     private static void useFunction() {
