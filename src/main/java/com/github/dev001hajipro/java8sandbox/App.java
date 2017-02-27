@@ -1,5 +1,7 @@
 package com.github.dev001hajipro.java8sandbox;
 
+import com.github.dev001hajipro.java8sandbox.util.Pair;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
@@ -10,6 +12,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+
+import static com.github.dev001hajipro.java8sandbox.util.StreamUtil.zip;
 
 /**
  * Java8の勉強
@@ -74,6 +78,76 @@ public class App {
         // Split + iterator
         System.out.println("");
         testSpliterator();
+
+        // testStreamUtil
+        testStreamUtil();
+
+        // findFirst
+        testFindFirst();
+    }
+
+    private static void testFindFirst() {
+        // findFirst
+        int v1 = Stream.of(1, 2, 3, 4, 5)
+                .findFirst().orElse(-1);
+        System.out.println(v1);
+
+        // findAny
+        int v2 = Stream.iterate(0, n -> n + 1).limit(1000).parallel()
+                .findAny().orElse(-1);
+        System.out.println(v2);
+
+        // count
+        long v3 = IntStream.iterate(0, n -> n + 1)
+                .limit(100)
+                .count();
+        System.out.println("v3=" + v3);
+
+        // and
+        boolean and = Stream.iterate(1, n -> n + 1)
+                .limit(500)
+                .allMatch(n -> n < 501);
+        System.out.println("and=" + and);
+        // or
+        boolean or = Stream.iterate(1, n -> n + 1)
+                .limit(500)
+                .anyMatch(n -> n == 5);
+        System.out.println("or=" + or);
+        // not
+        boolean not = Stream.iterate(1, n -> n + 1)
+                .limit(500)
+                .noneMatch(n -> n == 5);
+        System.out.println("not=" + not);
+
+        // reduce
+        System.out.println(
+                Stream.of("ab", "cd", "ef")
+                        .reduce("", (acc, e) -> {
+                            System.out.println("acc=" + acc + ",e=" + e);
+                            return e + acc;
+                        })
+        );
+    }
+
+    private static void testStreamUtil() {
+        List<Integer> list1 = Arrays.asList(0, 0, 1, 0, 1, 1);
+        List<Integer> list2 = Arrays.asList(0, 1, 2, 3, 4, 1);
+        zip(list1.stream(), list2.stream())
+                .forEach(System.out::print);
+        System.out.println();
+        zip(list1.stream(), list2.stream(), 3)
+                .forEach(System.out::print);
+
+        System.out.println();
+
+        System.out.println("両方1を見つける");
+        Optional<Pair<Integer, Integer>> pair = zip(list1.stream(), list2.stream())
+                .filter(p -> p._1.equals(1))
+                .filter(p -> p._1.equals(p._2))
+                .findAny();
+        System.out.println("isPresent=" + pair.isPresent());
+        System.out.println(pair.orElse(new Pair<>(0, 0)));
+
     }
 
     private static void testSpliterator() {
@@ -104,6 +178,7 @@ public class App {
                 .distinct()
                 .forEach(System.out::print);
         System.out.println();
+
 
     }
 

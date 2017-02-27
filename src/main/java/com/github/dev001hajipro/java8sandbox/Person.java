@@ -6,9 +6,9 @@ package com.github.dev001hajipro.java8sandbox;
  * @link http://enterprisegeeks.hatenablog.com/entry/2014/10/20/085500
  */
 public class Person {
-    private String name;
-    private int age;
-    private boolean maleFlag;
+    private final String name;
+    private final int age;
+    private final boolean maleFlag;
 
     Person(String name, int age, boolean male) {
         this.name = name;
