@@ -1,11 +1,15 @@
 package com.github.dev001hajipro.java8sandbox;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 import java.util.function.*;
+import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * Java8の勉強
@@ -15,6 +19,14 @@ import java.util.stream.Stream;
  */
 public class App {
     public static void main(String[] args) {
+        // class.getResourceAsStreamの場合は/が必要
+        try (InputStream resource = App.class.getResourceAsStream("/logging.properties")) {
+            LogManager.getLogManager().readConfiguration(resource);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
         //testHelloStream();
         System.out.println("hasOverAge:" + hasOverAge(5));
         System.out.println("hasOverAge:" + hasOverAge(15));
@@ -67,11 +79,32 @@ public class App {
     private static void testSpliterator() {
         Logger.getGlobal().info("aaa");
         System.out.println("testSpliterator");
-        List<Integer> list = Arrays.asList(1, 2, 2, 5, 4, 3, 9, 8, 7, 7);
+        List<Integer> list = Arrays.asList(1, 2, 2, 5, 4, 3, 9, 8, 7, 7, 6);
         list.stream()
                 .sorted()
                 .distinct()
                 .forEach(System.out::print);
+
+        System.out.println();
+
+        // Streamのうごきを調べるコード
+        // あえて、SORT済み、要素が一意という性質にすると
+        // .sorted().distinct()が正常に動作しない。
+        Stream<Integer> stream1 = StreamSupport.stream(
+                Spliterators.spliterator(list.iterator(), list.size(), Spliterator.SORTED | Spliterator.DISTINCT), false);
+        stream1.sorted()
+                .distinct()
+                .forEach(System.out::print);
+        System.out.println();
+        // Listインタフェースに合わせて、Spliterator.SIZED | Spliterator.ORDEREDを指定
+        // これは正しく動作する。
+        Stream<Integer> stream2 = StreamSupport.stream(
+                Spliterators.spliterator(list.iterator(), list.size(), Spliterator.SIZED | Spliterator.ORDERED), false);
+        stream2.sorted()
+                .distinct()
+                .forEach(System.out::print);
+        System.out.println();
+
     }
 
     private static void t3() {
