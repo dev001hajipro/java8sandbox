@@ -1,6 +1,7 @@
 package com.github.dev001hajipro.java8sandbox;
 
 import com.github.dev001hajipro.java8sandbox.util.Pair;
+import com.github.dev001hajipro.java8sandbox.util.StreamUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -53,7 +54,7 @@ public class App {
                 .map(n -> String.format("n=%d,", n)).collect(Collectors.toList())
                 .forEach(System.out::print);
 
-        System.out.println("xxxxxxoptional\n");
+        System.out.println("test optional\n");
         Optional<Person> optional = getPersons().stream().findFirst();
         optional.ifPresent(person -> System.out.println(person.getName()));
 
@@ -84,6 +85,106 @@ public class App {
 
         // findFirst
         testFindFirst();
+
+        t4();
+
+        t5();
+
+        t6();
+
+        useTakeWhile();
+
+        useDropWhile();
+    }
+
+    private static void useTakeWhile() {
+        Stream<Integer> squareNumbers = Stream.iterate(1, n -> n + 1).map(n -> n * n);
+        List<Integer> less100000 = StreamUtil.createTakeWhile(squareNumbers, n -> n <= 100000)
+                .collect(Collectors.toList());
+        System.out.println(less100000.size());
+
+        Stream<Integer> numbers = Stream.iterate(1, n -> n + 1);
+        String str = StreamUtil.createTakeWhile(numbers, n -> n < 15)
+                .map(n -> "" + n)
+                .collect(Collectors.joining(","));
+        System.out.println("n<15 = " + str);
+    }
+
+    private static void useDropWhile() {
+        Stream<Integer> numbers = Stream.iterate(1, n -> n + 1);
+        Optional<Integer> o1 = StreamUtil.createDropWhile(numbers, n -> n < 15).findFirst();
+        System.out.println(o1.orElse(-1));
+
+        System.out.println("filter?");
+        int v1 = Stream.iterate(1, n -> n + 1).filter(n -> n > 15).findFirst().orElse(-1);
+        System.out.println(v1);
+
+        Stream<Integer> squareNumbers = Stream.iterate(1, n -> n + 1).map(n -> n * n);
+        int over100000 = StreamUtil.createDropWhile(squareNumbers, n -> n < 100000)
+                .findFirst().orElse(-1);
+        System.out.println("over100000=" + over100000);
+
+        // 無限ループ?
+        Stream<Integer> squareNumbers2 = Stream.iterate(1, n -> n + 1).map(n -> n * n);
+        int v2 = squareNumbers2.filter(n -> n > 100000).findFirst().orElse(-1);
+        System.out.println("over100000=" + v2);
+
+
+    }
+
+    private static void t6() {
+        List<Integer> list = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9);
+
+        Map ret1 =
+                list.stream()
+                        .collect(Collectors.partitioningBy(n -> n % 2 == 0));
+        System.out.println(ret1.get(Boolean.TRUE));
+
+        System.out.println(
+                list.stream().collect(
+                        Collectors.groupingBy(n -> n % 3, Collectors.averagingDouble(n -> n + 0.0)))
+        );
+
+        // 要素の登場順にグループ分け
+        List<String> members = Arrays.asList("b0001", "a0001", "d0002", "c0004", "a0001");
+        Map<Character, List<String>> group = members.stream()
+                .collect(Collectors.groupingBy(s -> s.charAt(0), LinkedHashMap::new, Collectors.toList()));
+        group.forEach((k, v) -> System.out.println(k + " = " + v));
+    }
+
+    private static void t5() {
+        List<User> userList = new ArrayList<>();
+        userList.add(new User("aaa", 50));
+        userList.add(new User("bbb", 49));
+        userList.add(new User("ccc", 20));
+
+        // 平均
+        long sum = userList.stream().mapToInt(User::getPoint).sum();
+        System.out.println("sum=" + sum);
+        // JavaのStream#reduceは面倒
+        // combinerはparallel対応?
+        long sum2 = userList.stream()
+                .parallel()
+                .reduce(0, (acc, u) -> acc + u.getPoint(), (a1, a2) -> a1 + a2);
+        System.out.println("sum2=" + sum2);
+
+        // 合計
+        //
+
+        // 統計
+
+    }
+
+    private static void t4() {
+        System.out.println("t4=========");
+        Stream.of(1, 2, 3, 4, 5).collect(Collectors.toList()).forEach(System.out::print);
+        System.out.println();
+
+        System.out.println(String.join("*", "a", "b", "c"));
+
+        String s1 = Stream.of("1", "2", "3")
+                .collect(Collectors.joining("-", "[", "]"));
+        System.out.println(s1);
     }
 
     private static void testFindFirst() {
@@ -238,8 +339,8 @@ public class App {
      */
     private static void t1() {
         // リストは順序を持っている。
-        List<String> firstNames = Arrays.asList("taro", "jiro", "saburo");
-        List<String> lastNames = Arrays.asList("yamada", "tanaka", "kato");
+        List<String> firstNames = Arrays.asList("maria", "risa", "alice");
+        List<String> lastNames = Arrays.asList("davis", "johnson", "williams");
 
         Iterator<String> iterator = firstNames.iterator();
 
